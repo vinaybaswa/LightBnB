@@ -18,18 +18,15 @@ const users = require('./json/users.json');
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  let user;
-  for (const userId in users) {
-    user = users[userId];
-    if (user.email.toLowerCase() === email.toLowerCase()) {
-      break;
-    } else {
-      user = null;
-    }
-  }
-  return Promise.resolve(user);
-}
+  return pool.query(`
+  SELECT * FROM USERS
+  WHERE email = $1
+  `, [email])
+    .then(res => res.rows[0] === undefined ? null : res.rows[0]);
+};
 exports.getUserWithEmail = getUserWithEmail;
+
+//getUserWithEmail('asherpoole@gmx.com')
 
 /**
  * Get a single user from the database given their id.
@@ -37,9 +34,15 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  return Promise.resolve(users[id]);
-}
+  // return Promise.resolve(users[id]);
+  return pool.query(`
+  SELECT * FROM USERS
+  WHERE id = $1
+  `, [id])
+    .then(res => res.rows[0] === undefined ? null : res.rows[0]);
+};
 exports.getUserWithId = getUserWithId;
+//getUserWithId(9);
 
 
 /**
@@ -48,13 +51,15 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
-}
+  return pool.query(`
+    INSERT INTO users(name, email, password)
+    VALUES ($1, $2, $3)
+    RETURNING *`, [`${user.name}`, `${user.email}`, `${user.password}`])
+    .then(res => (res.rows[0]))
+    .catch(err => console.log(err));
+};
 exports.addUser = addUser;
-
+//addUser({ name: 'aa', email: 'bb@cc.com', password: 'dddd' });
 /// Reservations
 
 /**
@@ -64,7 +69,7 @@ exports.addUser = addUser;
  */
 const getAllReservations = function(guest_id, limit = 10) {
   return getAllProperties(null, 2);
-}
+};
 exports.getAllReservations = getAllReservations;
 
 /// Properties
@@ -81,7 +86,7 @@ const getAllProperties = function(options, limit = 10) {
   LIMIT $1
   `, [limit])
     .then(res => res.rows);
-}
+};
 exports.getAllProperties = getAllProperties;
 
 
@@ -95,5 +100,5 @@ const addProperty = function(property) {
   property.id = propertyId;
   properties[propertyId] = property;
   return Promise.resolve(property);
-}
+};
 exports.addProperty = addProperty;
