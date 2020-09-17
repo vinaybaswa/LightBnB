@@ -1,3 +1,12 @@
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  user: 'vagrant',
+  password: '123',
+  host: 'localhost',
+  database: 'bootcampx'
+});
+
 const properties = require('./json/properties.json');
 const users = require('./json/users.json');
 
@@ -38,7 +47,7 @@ exports.getUserWithId = getUserWithId;
  * @param {{name: string, password: string, email: string}} user
  * @return {Promise<{}>} A promise to the user.
  */
-const addUser =  function(user) {
+const addUser = function(user) {
   const userId = Object.keys(users).length + 1;
   user.id = userId;
   users[userId] = user;
